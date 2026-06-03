@@ -1,26 +1,48 @@
+const mongoose = require('mongoose');
 const Task = require('../models/Task');
-const {
-  getTaskCache,
-  setTaskCache,
-  invalidateTaskCache,
-  incrementAnalytics,
-} = require('./redisService');
+const { getTaskCache, setTaskCache, invalidateTaskCache, incrementAnalytics } = require('./redisService');
 const AppError = require('../utils/AppError');
 const logger = require('../utils/logger');
 
 const CACHE_TTL = () => parseInt(process.env.TASK_CACHE_TTL) || 300;
+const MAX_LIMIT = 100;
+const DEFAULT_LIMIT = 20;
 
-const getTasks = async (userId) => {
-  const cached = await getTaskCache(userId);
-  if (cached) {
-    logger.debug('Task list served from cache', { userId });
-    return { tasks: cached, fromCache: true };
+const getTasks = async (userId, { limit, cursor } = {}) => {
+  const pageSize = Math.min(parseInt(limit) || DEFAULT_LIMIT, MAX_LIMIT);
+
+  if (!cursor) {
+    const cached = await getTaskCache(userId);
+    if (cached) {
+      return { ...cached, fromCache: true };
+    }
   }
 
-  const tasks = await Task.find({ userId }).sort({ createdAt: -1 }).lean();
-  await setTaskCache(userId, tasks, CACHE_TTL());
-  logger.debug('Task list fetched from DB and cached', { userId });
-  return { tasks, fromCache: false };
+  const filter = { userId };
+  if (cursor) {
+    if (!mongoose.Types.ObjectId.isValid(cursor)) {
+      throw new AppError('Invalid cursor.', 400);
+    }
+    filter._id = { $lt: new mongoose.Types.ObjectId(cursor) };
+  }
+
+  const rows = await Task.find(filter)
+    .sort({ _id: -1 })
+    .limit(pageSize + 1)
+    .lean();
+
+  const hasMore = rows.length > pageSize;
+  const tasks = hasMore ? rows.slice(0, pageSize) : rows;
+  const nextCursor = hasMore ? tasks[tasks.length - 1]._id.toString() : null;
+
+  const payload = { tasks, pagination: { limit: pageSize, nextCursor, hasMore } };
+
+  // Only cache the default first page — paginated results change too frequently
+  if (!cursor) {
+    await setTaskCache(userId, payload, CACHE_TTL());
+  }
+
+  return { ...payload, fromCache: false };
 };
 
 const createTask = async (userId, { title, description, priority }) => {
@@ -39,9 +61,7 @@ const createTask = async (userId, { title, description, priority }) => {
 
 const updateTask = async (taskId, userId, updates) => {
   const task = await Task.findOne({ _id: taskId, userId });
-  if (!task) {
-    throw new AppError('Task not found.', 404);
-  }
+  if (!task) throw new AppError('Task not found.', 404);
 
   if (updates.title !== undefined) task.title = updates.title.trim();
   if (updates.description !== undefined) task.description = updates.description.trim();
@@ -56,9 +76,7 @@ const updateTask = async (taskId, userId, updates) => {
 
 const deleteTask = async (taskId, userId) => {
   const task = await Task.findOneAndDelete({ _id: taskId, userId });
-  if (!task) {
-    throw new AppError('Task not found.', 404);
-  }
+  if (!task) throw new AppError('Task not found.', 404);
 
   await invalidateTaskCache(userId);
   await incrementAnalytics('tasksDeleted');

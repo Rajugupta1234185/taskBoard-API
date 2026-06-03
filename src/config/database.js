@@ -6,13 +6,11 @@ const connectDB = async () => {
     await mongoose.connect(process.env.MONGODB_URI);
     logger.info('MongoDB connected');
   } catch (err) {
-    logger.error('MongoDB connection error:', err.message);
+    logger.error(`MongoDB connection failed: ${err.message}`);
     process.exit(1);
   }
 };
 
-mongoose.connection.on('disconnected', () => {
-  logger.warn('MongoDB disconnected');
-});
+mongoose.connection.on('disconnected', () => logger.warn('MongoDB disconnected'));
 
 module.exports = connectDB;

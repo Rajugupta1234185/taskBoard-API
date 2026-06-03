@@ -11,19 +11,31 @@ router.use(authenticate);
  * /tasks:
  *   get:
  *     tags: [Tasks]
- *     summary: List all tasks for the logged-in user
+ *     summary: List tasks (cursor-based pagination)
  *     description: |
- *       Returns all tasks belonging to the authenticated user.
+ *       Returns tasks for the authenticated user, sorted newest-first.
  *
- *       **Caching:** The first request fetches from MongoDB and stores the result in Redis (TTL: 5 minutes).
- *       Subsequent requests within 5 minutes are served from cache. The cache is invalidated automatically
- *       on any create, update, or delete operation.
+ *       Uses **cursor-based pagination** — pass the `nextCursor` from the previous response as the `cursor`
+ *       query param to fetch the next page. This avoids the offset drift problem and stays efficient at scale.
+ *
+ *       **Caching:** The first page (no cursor) is cached in Redis for 5 minutes per user.
+ *       Any write operation (create/update/delete) invalidates the cache immediately.
  *     security:
  *       - bearerAuth: []
  *       - cookieAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, default: 20, minimum: 1, maximum: 100 }
+ *         description: Number of tasks per page (max 100)
+ *       - in: query
+ *         name: cursor
+ *         schema: { type: string }
+ *         description: ID of the last task from the previous page (omit for first page)
+ *         example: 665f1a2b3c4d5e6f7a8b9c0d
  *     responses:
  *       200:
- *         description: Task list (may be served from Redis cache)
+ *         description: Paginated task list
  *         content:
  *           application/json:
  *             schema:
@@ -36,7 +48,12 @@ router.use(authenticate);
  *                     tasks:
  *                       type: array
  *                       items: { $ref: '#/components/schemas/Task' }
- *                     count: { type: integer, example: 3 }
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         limit: { type: integer, example: 20 }
+ *                         nextCursor: { type: string, nullable: true, example: 665f1a2b3c4d5e6f7a8b9c0d }
+ *                         hasMore: { type: boolean, example: true }
  *                 meta:
  *                   type: object
  *                   properties:

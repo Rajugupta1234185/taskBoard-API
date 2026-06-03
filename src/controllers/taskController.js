@@ -2,11 +2,12 @@ const taskService = require('../services/taskService');
 
 const getTasks = async (req, res, next) => {
   try {
-    const { tasks, fromCache } = await taskService.getTasks(req.session.userId);
+    const { limit, cursor } = req.query;
+    const result = await taskService.getTasks(req.session.userId, { limit, cursor });
     res.json({
       success: true,
-      data: { tasks, count: tasks.length },
-      meta: { fromCache },
+      data: result,
+      meta: { fromCache: result.fromCache },
     });
   } catch (err) {
     next(err);

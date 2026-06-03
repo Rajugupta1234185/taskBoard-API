@@ -3,13 +3,10 @@ const AppError = require('../utils/AppError');
 
 const authenticate = async (req, res, next) => {
   try {
-    // Accept token from Authorization: Bearer <token> header OR sessionId cookie
-    let sessionId = req.cookies?.sessionId;
-
-    const authHeader = req.headers['authorization'];
-    if (!sessionId && authHeader && authHeader.startsWith('Bearer ')) {
-      sessionId = authHeader.slice(7).trim();
-    }
+    const fromHeader = req.headers['authorization']?.startsWith('Bearer ')
+      ? req.headers['authorization'].slice(7).trim()
+      : null;
+    const sessionId = fromHeader || req.cookies?.sessionId;
 
     if (!sessionId) {
       return next(new AppError('Authentication required. Provide a Bearer token or login cookie.', 401));
