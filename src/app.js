@@ -2,8 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
+const swaggerUi = require('swagger-ui-express');
 
 const connectDB = require('./config/database');
+const swaggerSpec = require('./config/swagger');
 const logger = require('./utils/logger');
 const { rateLimiter } = require('./middleware/rateLimiter');
 const { errorHandler } = require('./middleware/errorHandler');
@@ -19,6 +21,13 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || '*', credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(rateLimiter);
+
+// ── Swagger Docs ──────────────────────────────────────────────────────────────
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customSiteTitle: 'TaskBoard API Docs',
+  swaggerOptions: { withCredentials: true },
+}));
+app.get('/api-docs.json', (req, res) => res.json(swaggerSpec));
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/', authRoutes);
@@ -45,6 +54,7 @@ const start = async () => {
   await connectDB();
   app.listen(PORT, () => {
     logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+    logger.info(`Swagger docs available at http://localhost:${PORT}/api-docs`);
   });
 };
 
