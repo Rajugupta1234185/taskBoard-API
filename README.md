@@ -41,27 +41,7 @@ npm start          # production
 npm run dev        # development (nodemon)
 ```
 
----
 
-## Environment Variables
-
-| Variable             | Default                              | Description                                 |
-|----------------------|--------------------------------------|---------------------------------------------|
-| `PORT`               | `3000`                               | HTTP port                                   |
-| `NODE_ENV`           | `development`                        | Environment                                 |
-| `MONGODB_URI`        | `mongodb://localhost:27017/taskboard`| MongoDB connection string                   |
-| `REDIS_HOST`         | `localhost`                          | Redis hostname                              |
-| `REDIS_PORT`         | `6379`                               | Redis port                                  |
-| `REDIS_PASSWORD`     | *(empty)*                            | Redis password (leave empty if none)        |
-| `SESSION_SECRET`     | —                                    | Secret key for sessions (change in prod)    |
-| `SESSION_EXPIRY`     | `3600`                               | Session TTL in seconds (1 hour)             |
-| `RATE_LIMIT_MAX`     | `20`                                 | Max requests per minute per IP              |
-| `RATE_LIMIT_WINDOW`  | `60`                                 | Rate limit window in seconds                |
-| `MAX_LOGIN_ATTEMPTS` | `5`                                  | Failed attempts before lockout              |
-| `LOGIN_BLOCK_DURATION` | `900`                              | Lockout duration in seconds (15 min)        |
-| `TASK_CACHE_TTL`     | `300`                                | Task list cache TTL in seconds (5 min)      |
-
----
 
 ## API Documentation
 
