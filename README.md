@@ -27,13 +27,13 @@ A production-oriented Task Management REST API built with Node.js, Express, Mong
 
 ```bash
 # 1. Clone / enter the project
-cd taskboard
 
 # 2. Install dependencies
 npm install
 
-# 3. Configure environment
+# 3. Configure environment # i have used mongodb database and upstash redis server so use redis url in .env
 cp .env.example .env
+
 # Edit .env with your MongoDB URI, Redis config, and secrets
 
 # 4. Start the server
