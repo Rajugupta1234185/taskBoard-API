@@ -1,24 +1,33 @@
 const Redis = require('ioredis');
 const logger = require('../utils/logger');
 
-const redisConfig = {
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT) || 6379,
-  retryStrategy(times) {
-    const delay = Math.min(times * 50, 2000);
-    return delay;
-  },
-  lazyConnect: false,
-};
+let redis;
 
-if (process.env.REDIS_PASSWORD) {
-  redisConfig.password = process.env.REDIS_PASSWORD;
+if (process.env.REDIS_URL) {
+  // Cloud Redis (Upstash, Redis Cloud, etc.) — connection string includes auth
+  redis = new Redis(process.env.REDIS_URL, {
+    tls: process.env.REDIS_URL.startsWith('rediss://') ? {} : undefined,
+    retryStrategy(times) {
+      return Math.min(times * 100, 3000);
+    },
+  });
+} else {
+  // Local Redis — individual host/port/password settings
+  const config = {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: parseInt(process.env.REDIS_PORT) || 6379,
+    retryStrategy(times) {
+      return Math.min(times * 100, 3000);
+    },
+  };
+  if (process.env.REDIS_PASSWORD) {
+    config.password = process.env.REDIS_PASSWORD;
+  }
+  redis = new Redis(config);
 }
 
-const redis = new Redis(redisConfig);
-
 redis.on('connect', () => logger.info('Redis connected'));
-redis.on('error', (err) => logger.error('Redis error:', err.message));
+redis.on('error', (err) => logger.error(`Redis error: ${err.message}`));
 redis.on('reconnecting', () => logger.warn('Redis reconnecting...'));
 
 module.exports = redis;
