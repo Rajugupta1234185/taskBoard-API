@@ -7,12 +7,20 @@ const options = {
       title: 'TaskBoard API',
       version: '1.0.0',
       description:
-        'Task Management REST API built with Node.js, Express, MongoDB, and Redis. ' +
-        'Authentication uses httpOnly cookies — call **POST /login** first, then the browser/client will automatically send the session cookie on subsequent requests.',
+        'Task Management REST API built with Node.js, Express, MongoDB, and Redis.\n\n' +
+        '**Authentication:** Call `POST /login` → copy the `token` from the response → ' +
+        'click **Authorize** (🔒) and paste it as the Bearer token. ' +
+        'All protected endpoints will then use that token via the `Authorization: Bearer <token>` header.',
     },
     servers: [{ url: 'http://localhost:3000', description: 'Local development server' }],
     components: {
       securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'SessionID',
+          description: 'Paste the token returned by POST /login',
+        },
         cookieAuth: {
           type: 'apiKey',
           in: 'cookie',
@@ -36,6 +44,15 @@ const options = {
           properties: {
             email: { type: 'string', format: 'email', example: 'john@example.com' },
             password: { type: 'string', format: 'password', example: 'secret123' },
+          },
+        },
+        LoginResponse: {
+          type: 'object',
+          properties: {
+            token: { type: 'string', example: '550e8400-e29b-41d4-a716-446655440000', description: 'Session token — use as Bearer token in Authorization header' },
+            tokenType: { type: 'string', example: 'Bearer' },
+            expiresIn: { type: 'integer', example: 3600, description: 'Token expiry in seconds' },
+            user: { $ref: '#/components/schemas/User' },
           },
         },
         User: {

@@ -19,6 +19,7 @@ router.use(authenticate);
  *       Subsequent requests within 5 minutes are served from cache. The cache is invalidated automatically
  *       on any create, update, or delete operation.
  *     security:
+ *       - bearerAuth: []
  *       - cookieAuth: []
  *     responses:
  *       200:
@@ -55,6 +56,7 @@ router.get('/', getTasks);
  *     summary: Create a new task
  *     description: Creates a task for the authenticated user and invalidates the task list cache.
  *     security:
+ *       - bearerAuth: []
  *       - cookieAuth: []
  *     requestBody:
  *       required: true
@@ -93,6 +95,7 @@ router.post('/', validateTask, createTask);
  *     summary: Update a task
  *     description: Updates a task owned by the authenticated user. All body fields are optional. Invalidates the task list cache.
  *     security:
+ *       - bearerAuth: []
  *       - cookieAuth: []
  *     parameters:
  *       - in: path
@@ -140,6 +143,7 @@ router.put('/:id', validateTaskUpdate, updateTask);
  *     summary: Delete a task
  *     description: Permanently deletes a task owned by the authenticated user and invalidates the task list cache.
  *     security:
+ *       - bearerAuth: []
  *       - cookieAuth: []
  *     parameters:
  *       - in: path

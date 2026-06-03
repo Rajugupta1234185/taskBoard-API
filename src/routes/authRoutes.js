@@ -65,10 +65,10 @@ router.post('/register', validateRegister, register);
  *             $ref: '#/components/schemas/LoginRequest'
  *     responses:
  *       200:
- *         description: Login successful — sets sessionId cookie
+ *         description: Login successful — returns Bearer token + sets sessionId cookie
  *         headers:
  *           Set-Cookie:
- *             description: sessionId (httpOnly cookie)
+ *             description: sessionId (httpOnly cookie, auto-sent by browsers)
  *             schema:
  *               type: string
  *               example: sessionId=uuid-value; Path=/; HttpOnly; SameSite=Lax
@@ -80,9 +80,7 @@ router.post('/register', validateRegister, register);
  *                 success: { type: boolean, example: true }
  *                 message: { type: string, example: Login successful. }
  *                 data:
- *                   type: object
- *                   properties:
- *                     user: { $ref: '#/components/schemas/User' }
+ *                   $ref: '#/components/schemas/LoginResponse'
  *       400:
  *         $ref: '#/components/responses/ValidationError'
  *       401:
@@ -116,6 +114,7 @@ router.post('/login', validateLogin, login);
  *     summary: Logout and destroy session
  *     description: Deletes the session from Redis and clears the sessionId cookie.
  *     security:
+ *       - bearerAuth: []
  *       - cookieAuth: []
  *     responses:
  *       200:
@@ -142,6 +141,7 @@ router.post('/logout', authenticate, logout);
  *     summary: Get current session info
  *     description: Returns the session data stored in Redis for the authenticated user.
  *     security:
+ *       - bearerAuth: []
  *       - cookieAuth: []
  *     responses:
  *       200:

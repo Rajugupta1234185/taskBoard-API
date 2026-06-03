@@ -13,6 +13,7 @@ const { authenticate } = require('../middleware/auth');
  *       Returns cumulative counters maintained in Redis using atomic INCR operations.
  *       Counters are persistent (no TTL) and increment in real time.
  *     security:
+ *       - bearerAuth: []
  *       - cookieAuth: []
  *     responses:
  *       200:

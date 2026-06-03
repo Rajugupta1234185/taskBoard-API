@@ -20,7 +20,16 @@ const login = async (req, res, next) => {
   try {
     const { sessionId, user } = await authService.login(req.body.email, req.body.password);
     res.cookie('sessionId', sessionId, COOKIE_OPTIONS());
-    res.json({ success: true, message: 'Login successful.', data: { user } });
+    res.json({
+      success: true,
+      message: 'Login successful.',
+      data: {
+        token: sessionId,
+        tokenType: 'Bearer',
+        expiresIn: parseInt(process.env.SESSION_EXPIRY) || 3600,
+        user,
+      },
+    });
   } catch (err) {
     next(err);
   }
